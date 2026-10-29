@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Викторина</title>
+<style>
+  :root{
+    --bg:#f4f5f7;
+    --card:#ffffff;
+    --ink:#101114;
+    --muted:#6b7280;
+    --line:#e3e5e9;
+    --accent:#ffcc00;
+    --accent-ink:#1a1a1a;
+    --ok:#0f8a4d;
+    --ok-bg:#e8f7ef;
+    --bad:#c62828;
+    --bad-bg:#fdeaea;
+    --radius:16px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    font-size:17px;
+    line-height:1.5;
+    -webkit-text-size-adjust:100%;
+  }
+  .app{
+    max-width:760px;
+    margin:0 auto;
+    padding:24px 16px 40px;
+    min-height:100%;
+    display:flex;
+    flex-direction:column;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:18px;
+    font-size:13px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--muted);
+  }
+  .brand .dot{
+    width:12px;height:12px;border-radius:50%;
+    background:var(--accent);
+    box-shadow:0 0 0 4px rgba(255,204,0,.25);
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:28px;
+    box-shadow:0 1px 2px rgba(16,17,20,.04);
+  }
+  h1{
+    font-size:28px;
+    line-height:1.2;
+    margin:0 0 10px;
+    letter-spacing:-.01em;
+  }
+  .lead{color:var(--muted);margin:0 0 22px}
+  .meta{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-bottom:24px;
+  }
+  .chip{
+    font-size:13px;
+    padding:5px 11px;
+    border-radius:999px;
+    background:#f1f2f4;
+    color:#3a3d44;
+    white-space:nowrap;
+  }
+  button{
+    font:inherit;
+    cursor:pointer;
+    border-radius:12px;
+    border:1px solid transparent;
+    transition:background .15s,border-color .15s,transform .06s;
+  }
+  button:active{transform:translateY(1px)}
+  button:focus-visible{outline:3px solid rgba(255,204,0,.65);outline-offset:2px}
+  .btn-main{
+    background:var(--accent);
+    color:var(--accent-ink);
+    font-weight:600;
+    padding:14px 26px;
+    border-color:var(--accent);
+  }
+  .btn-main:hover{background:#f5c400}
+  .btn-ghost{
+    background:transparent;
+    border-color:var(--line);
+    color:var(--ink);
+    padding:12px 20px;
+  }
+  .btn-ghost:hover{background:#f7f8f9}
+  .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+  .progress{
+    height:6px;
+    background:#e9ebee;
+    border-radius:999px;
+    overflow:hidden;
+    margin-bottom:22px;
+  }
+  .progress span{
+    display:block;
+    height:100%;
+    width:0;
+    background:var(--accent);
+    border-radius:999px;
+    transition:width .3s ease;
+  }
+  .q-count{
+    font-size:13px;
+    color:var(--muted);
+    margin-bottom:8px;
+    font-variant-numeric:tabular-nums;
+  }
+  .q-text{
+    font-size:21px;
+    font-weight:600;
+    line-height:1.35;
+    margin:0 0 20px;
+  }
+  .options{display:flex;flex-direction:column;gap:10px;margin:0 0 6px;padding:0;list-style:none}
+  .opt{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    width:100%;
+    text-align:left;
+    padding:15px 17px;
+    background:#fafbfc;
+    border:1px solid var(--line);
+    color:var(--ink);
+    font-size:16px;
+    line-height:1.4;
+  }
+  .opt:hover:not(:disabled){background:#f4f6f8;border-color:#d3d7dd}
+  .opt:disabled{cursor:default}
+  .opt .key{
+    flex:0 0 auto;
+    width:24px;height:24px;
+    display:grid;place-items:center;
+    border-radius:7px;
+    background:#eceef1;
+    font-size:13px;
+    font-weight:600;
+    color:#4b5058;
+    margin-top:1px;
+  }
+  .opt.correct{background:var(--ok-bg);border-color:#9fd9bd}
+  .opt.correct .key{background:var(--ok);color:#fff}
+  .opt.wrong{background:var(--bad-bg);border-color:#f0b4b4}
+  .opt.wrong .key{background:var(--bad);color:#fff}
+  .opt.dim{opacity:.55}
+  .feedback{
+    margin-top:18px;
+    padding:14px 16px;
+    border-radius:12px;
+    border:1px solid var(--line);
+    background:#fafbfc;
+    font-size:15px;
+  }
+  .feedback.ok{border-color:#9fd9bd;background:var(--ok-bg)}
+  .feedback.bad{border-color:#f0b4b4;background:var(--bad-bg)}
+  .feedback b{display:block;margin-bottom:4px}
+  .score{
+    font-size:52px;
+    font-weight:700;
+    line-height:1;
+    letter-spacing:-.02em;
+    margin:0 0 6px;
+    font-variant-numeric:tabular-nums;
+  }
+  .verdict{font-size:18px;font-weight:600;margin:0 0 6px}
+  .review{margin:26px 0 0;padding:0;list-style:none;border-top:1px solid var(--line)}
+  .review li{padding:16px 0;border-bottom:1px solid var(--line)}
+  .review .rq{font-weight:600;margin-bottom:6px}
+  .review .ra{font-size:15px;color:var(--muted)}
+  .review .ra em{font-style:normal;color:var(--ok);font-weight:600}
+  .footer{
+    margin-top:auto;
+    padding-top:22px;
+    font-size:12px;
+    color:#9aa0a8;
+    text-align:center;
+  }
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  @media (max-width:520px){
+    .card{padding:20px}
+    h1{font-size:23px}
+    .q-text{font-size:19px}
+    .score{font-size:44px}
+    body{font-size:16px}
+  }
+  @media print{
+    .footer,.row{display:none}
+    body{background:#fff}
+    .card{border:none;box-shadow:none}
+  }
+  .review-head{margin:26px 0 2px;font-weight:600;font-size:15px;color:var(--ink)}
+  .review-head.ok{color:var(--ok)}
+  .rbad{font-size:15px;color:var(--bad);margin-top:3px}
+  .rok{font-size:15px;color:var(--ok);font-weight:600;margin-top:2px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="brand"><span class="dot"></span><span id="brandText">Викторина</span></div>
+  <main id="screen" class="card" aria-live="polite"></main>
+  <div class="footer">Работает без интернета · один файл · можно открыть с телефона</div>
+</div>
+
+<script>
+var QUIZ = {
+  title: "Добро пожаловать в билайн",
+  subtitle: "Продукты компании · проверка знаний",
+  passScore: 70,
+  shuffleQuestions: true,
+  shuffleOptions: true,
+  questions: [
+    {
+      q: "При звонках на какие номера расходуются минуты из пакета по условиям подписки bee?",
+      options: [
+        "На местные и междугородние номера другого оператора РФ, включая городские",
+        "Только на местные номера билайна",
+        "На междугородние номера билайна по РФ",
+        "На любые номера, включая билайн"
+      ],
+      correct: 0,
+      note: "Звонки на билайн по всей России безлимитные — минуты из пакета на них не расходуются."
+    },
+    {
+      q: "Сколько стоит раздача интернет-трафика на другие устройства через Wi-Fi?",
+      options: [
+        "Бесплатно",
+        "3 ₽/МБ",
+        "150 ₽/месяц",
+        "7 ₽/сутки"
+      ],
+      correct: 0,
+      note: "После раздачи 50 ГБ скорость снижается до 1 Мбит/с. Снять ограничение — «Раздача PRO»: 50 ₽/сутки или 105 ₽/мес."
+    },
+    {
+      q: "От чего зависит доступная для подключения скорость Домашнего интернета от билайна?",
+      options: [
+        "От технической возможности и филиала",
+        "От желания клиента",
+        "От года постройки дома клиента",
+        "Ни от чего — она одинакова для всех"
+      ],
+      correct: 0,
+      note: "Диапазон — от 100 Мбит/с до 1 000 Мбит/с."
+    },
+    {
+      q: "Каким сервисом у нас работает телевидение?",
+      options: [
+        "Кинопоиск",
+        "Билайн ТВ",
+        "Попкорн",
+        "Яндекс ТВ"
+      ],
+      correct: 0,
+      note: "Телевидение в подписке bee работает через Кинопоиск. Приставка для просмотра — Яндекс.ТВ."
+    },
+    {
+      q: "Благодаря какой опции клиенты бесплатно и без ограничений пользуются мессенджерами?",
+      options: [
+        "«Безлимитный трафик на мессенджеры»",
+        "«Общайся!»",
+        "«Безграничное общение»",
+        "«Неограниченный трафик на мессенджеры и SMS»"
+      ],
+      correct: 0,
+      note: "Безлимит на Telegram, Snapchat, WeChat, Chi Gap, MAX. При включённом VPN безлимит не действует."
+    },
+    {
+      q: "Что такое GPON?",
+      options: [
+        "Гигабитная пассивная оптическая сеть: оптоволокно заходит прямо в квартиру",
+        "Технология подключения по витой паре через общеподъездный коммутатор",
+        "Стандарт Wi-Fi 6 для роутеров билайна",
+        "Способ оплаты услуг через личный кабинет"
+      ],
+      correct: 0,
+      note: "Скорость до 1 Гбит/с и выше, между станцией и абонентом — пассивные сплиттеры, без общеподъездных коммутаторов."
+    },
+    {
+      q: "На скольких устройствах одновременно можно смотреть Кинопоиск с одного аккаунта?",
+      options: [
+        "5",
+        "1",
+        "3",
+        "10"
+      ],
+      correct: 0,
+      note: "Кинопоиск — одновременный просмотр на 5 устройствах. Яндекс Плюс — до 10 устройств на одну подписку."
+    },
+    {
+      q: "Какое из перечисленного — реальное преимущество Домашнего интернета от билайна?",
+      options: [
+        "Предоплатная система расчётов: в минус не уйдёшь, должником не станешь",
+        "Скорость снижается вечером в часы пик",
+        "Техподдержка работает только в рабочие дни",
+        "Оплата возможна только в офисе билайна"
+      ],
+      correct: 0,
+      note: "Ещё преимущества: подключение по витой паре в удобное клиенту время, услуга «Переезд», техподдержка 24/7 и удержание скорости не менее 90% от тарифной."
+    },
+    {
+      q: "Кому можно оформить подключение Домашнего интернета от билайна?",
+      options: [
+        "Совершеннолетнему физлицу в жилом помещении",
+        "Любому клиенту, включая офисы и салоны красоты",
+        "Клиенту с 16 лет",
+        "Только собственнику квартиры"
+      ],
+      correct: 0,
+      note: "Договор подписывается с 18 лет. Снимать квартиру можно — быть собственником не обязательно. Офисы и салоны оформляются через юр. отдел, не через агента."
+    },
+    {
+      q: "Куда направить клиента, который уже пользуется Домашним интернетом от билайна и хочет сменить тариф?",
+      options: [
+        "На горячую линию поддержки 8 800 700 8000",
+        "Оформить как нового клиента — агент подключит заново",
+        "В юр. отдел билайна",
+        "В любой офис продаж без записи"
+      ],
+      correct: 0,
+      note: "Агент прямых продаж подключает только новых клиентов. Действующих клиентов по любым вопросам направляем на горячую линию 8 800 700 8000."
+    }
+  ]
+};
+
+(function () {
+  var screenEl = document.getElementById("screen");
+  var brandEl = document.getElementById("brandText");
+  var run = [];
+  var idx = 0;
+  var answers = [];
+
+  function shuffle(a) {
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  function buildRun() {
+    var order = QUIZ.questions.map(function (_, i) { return i; });
+    if (QUIZ.shuffleQuestions) shuffle(order);
+    return order.map(function (qi) {
+      var src = QUIZ.questions[qi];
+      var opts = src.options.map(function (text, oi) {
+        return { text: text, ok: oi === src.correct };
+      });
+      if (QUIZ.shuffleOptions) shuffle(opts);
+      return { q: src.q, note: src.note || "", opts: opts };
+    });
+  }
+
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+
+  function start() {
+    run = buildRun();
+    idx = 0;
+    answers = [];
+    renderStart();
+  }
+
+  function renderStart() {
+    screenEl.innerHTML = "";
+    screenEl.appendChild(el("h1", null, QUIZ.title));
+    screenEl.appendChild(el("p", "lead", QUIZ.subtitle));
+
+    var meta = el("div", "meta");
+    meta.appendChild(el("span", "chip", "Вопросов: " + QUIZ.questions.length));
+    meta.appendChild(el("span", "chip", "Проходной балл: " + QUIZ.passScore + "%"));
+    meta.appendChild(el("span", "chip", "Без ограничения времени"));
+    screenEl.appendChild(meta);
+
+    var row = el("div", "row");
+    var b = el("button", "btn-main", "Начать");
+    b.type = "button";
+    b.addEventListener("click", function () {
+      run = buildRun();
+      idx = 0;
+      answers = [];
+      renderQuestion();
+    });
+    row.appendChild(b);
+    screenEl.appendChild(row);
+  }
+
+  function renderQuestion() {
+    var item = run[idx];
+    screenEl.innerHTML = "";
+
+    var pct = Math.round((idx / run.length) * 100);
+    var bar = el("div", "progress");
+    var fill = el("span");
+    fill.style.width = pct + "%";
+    bar.appendChild(fill);
+    screenEl.appendChild(bar);
+
+    screenEl.appendChild(el("div", "q-count", "Вопрос " + (idx + 1) + " из " + run.length));
+    screenEl.appendChild(el("p", "q-text", item.q));
+
+    var list = el("ul", "options");
+    var buttons = [];
+
+    item.opts.forEach(function (opt, i) {
+      var li = el("li");
+      var btn = el("button", "opt");
+      btn.type = "button";
+      btn.appendChild(el("span", "key", String.fromCharCode(1040 + i)));
+      btn.appendChild(el("span", null, opt.text));
+      btn.addEventListener("click", function () { choose(i); });
+      li.appendChild(btn);
+      list.appendChild(li);
+      buttons.push(btn);
+    });
+    screenEl.appendChild(list);
+
+    var holder = el("div");
+    holder.id = "after";
+    screenEl.appendChild(holder);
+
+    function choose(i) {
+      var chosen = item.opts[i];
+      answers.push({ ok: chosen.ok, text: chosen.text });
+      buttons.forEach(function (b, bi) {
+        b.disabled = true;
+        if (item.opts[bi].ok) b.classList.add("correct");
+        else if (bi === i) b.classList.add("wrong");
+        else b.classList.add("dim");
+      });
+
+      var fb = el("div", "feedback " + (chosen.ok ? "ok" : "bad"));
+      fb.appendChild(el("b", null, chosen.ok ? "Верно" : "Неверно"));
+      if (!chosen.ok) {
+        var right = item.opts.filter(function (o) { return o.ok; })[0];
+        fb.appendChild(el("div", null, "Правильный ответ: " + right.text));
+      }
+      if (item.note) fb.appendChild(el("div", null, item.note));
+      holder.innerHTML = "";
+      holder.appendChild(fb);
+
+      var row = el("div", "row");
+      row.style.marginTop = "18px";
+      var next = el("button", "btn-main", idx === run.length - 1 ? "Показать результат" : "Далее");
+      next.type = "button";
+      next.addEventListener("click", function () {
+        idx++;
+        if (idx >= run.length) renderResult();
+        else renderQuestion();
+      });
+      row.appendChild(next);
+      holder.appendChild(row);
+      next.focus();
+    }
+  }
+
+  function renderResult() {
+    var score = answers.filter(function (a) { return a.ok; }).length;
+    var total = run.length;
+    var pct = Math.round((score / total) * 100);
+    var passed = pct >= QUIZ.passScore;
+
+    screenEl.innerHTML = "";
+    screenEl.appendChild(el("div", "q-count", "Результат"));
+    screenEl.appendChild(el("p", "score", score + " / " + total));
+    screenEl.appendChild(el("p", "verdict", passed ? "Зачёт: " + pct + "%" : "Пока не зачёт: " + pct + "%"));
+    screenEl.appendChild(el("p", "lead", passed
+      ? "Проходной балл " + QUIZ.passScore + "% пройден."
+      : "Нужно не меньше " + QUIZ.passScore + "%. Разберите ошибки ниже и пройдите заново."));
+
+    var wrong = [];
+    run.forEach(function (item, i) {
+      if (answers[i] && !answers[i].ok) {
+        var right = item.opts.filter(function (o) { return o.ok; })[0];
+        wrong.push({ q: item.q, given: answers[i].text, right: right.text });
+      }
+    });
+
+    if (wrong.length) {
+      screenEl.appendChild(el("div", "review-head", "Вопросы с неверными ответами — " + wrong.length + " из " + total));
+      var ul = el("ul", "review");
+      wrong.forEach(function (w, n) {
+        var li = el("li");
+        li.appendChild(el("div", "rq", (n + 1) + ". " + w.q));
+        li.appendChild(el("div", "rbad", "Ваш ответ: " + w.given));
+        li.appendChild(el("div", "rok", "Правильный ответ: " + w.right));
+        ul.appendChild(li);
+      });
+      screenEl.appendChild(ul);
+    } else {
+      screenEl.appendChild(el("div", "review-head ok", "Все ответы верные — ошибок нет."));
+    }
+
+    var row = el("div", "row");
+    row.style.marginTop = "24px";
+
+    var again = el("button", "btn-main", "Пройти заново");
+    again.type = "button";
+    again.addEventListener("click", function () {
+      run = buildRun();
+      idx = 0;
+      answers = [];
+      renderQuestion();
+    });
+    row.appendChild(again);
+
+    var copy = el("button", "btn-ghost", "Скопировать результат");
+    copy.type = "button";
+    copy.addEventListener("click", function () {
+      var text = QUIZ.title + " — " + score + " из " + total + " (" + pct + "%), " + (passed ? "зачёт" : "не зачёт");
+      copyText(text, copy);
+    });
+    row.appendChild(copy);
+
+    var home = el("button", "btn-ghost", "На главную");
+    home.type = "button";
+    home.addEventListener("click", renderStart);
+    row.appendChild(home);
+
+    screenEl.appendChild(row);
+  }
+
+  function copyText(text, btn) {
+    function done() {
+      var old = btn.textContent;
+      btn.textContent = "Скопировано";
+      setTimeout(function () { btn.textContent = old; }, 1600);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, fallback);
+    } else {
+      fallback();
+    }
+    function fallback() {
+      var ta = document.createElement("textarea");
+      ta.value = text;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand("copy"); done(); } catch (e) {}
+      document.body.removeChild(ta);
+    }
+  }
+
+  document.addEventListener("keydown", function (e) {
+    if (e.target && e.target.tagName === "TEXTAREA") return;
+    if (/^[1-9]$/.test(e.key)) {
+      var btns = screenEl.querySelectorAll(".opt");
+      var n = parseInt(e.key, 10) - 1;
+      if (btns[n] && !btns[n].disabled) btns[n].click();
+    } else if (e.key === "Enter") {
+      var next = screenEl.querySelector("#after .btn-main");
+      if (next) { e.preventDefault(); next.click(); }
+    }
+  });
+
+  if (document.title === "Викторина") document.title = QUIZ.title;
+  brandEl.textContent = "Викторина";
+  start();
+})();
+</script>
+</body>
+</html>
