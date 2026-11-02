@@ -205,7 +205,6 @@
 <div class="bar">
   <div class="bar-inner">
     <button type="button" class="btn-main" id="check">Проверить</button>
-    <button type="button" class="btn-ghost" id="reveal">Показать ответ</button>
     <button type="button" class="btn-ghost" id="shuffle">Перемешать</button>
     <span class="score" id="score"></span>
   </div>
@@ -248,7 +247,6 @@ var ITEMS = [
   var stepsEl = document.getElementById("steps");
   var resultEl = document.getElementById("result");
   var scoreEl = document.getElementById("score");
-  var revealBtn = document.getElementById("reveal");
   var checkBtn = document.getElementById("check");
   var shuffleBtn = document.getElementById("shuffle");
   var order = [];
@@ -380,20 +378,7 @@ var ITEMS = [
       "</div>";
   }
 
-  function reveal() {
-    order = ITEMS.map(function (_, i) { return i; });
-    render();
-    [].forEach.call(list.children, function (c) { c.classList.add("ok"); });
-    scoreEl.textContent = ITEMS.length + " / " + ITEMS.length;
-    resultEl.hidden = false;
-    resultEl.className = "result ok";
-    resultEl.innerHTML =
-      '<div class="big">Правильный порядок</div>' +
-      '<div class="msg">Домашний интернет → телевидение → мобильная связь → итог.</div>';
-  }
-
   checkBtn.addEventListener("click", check);
-  revealBtn.addEventListener("click", reveal);
   shuffleBtn.addEventListener("click", build);
 
   var dragging = null, ghost = null, grabOffset = 0;
